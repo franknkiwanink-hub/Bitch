@@ -53,6 +53,6 @@ export async function reportListing(params: {
     body: JSON.stringify({ action: "listing.report", ...params }),
   });
   const out: ApiEnvelope<{ reportId: string }> = await res.json();
-  if (!out.ok) throw new ReportApiError(out.error.message, out.error.code);
+  if (out.ok === false) throw new ReportApiError(out.error.message, out.error.code);
   return out.data;
 }
