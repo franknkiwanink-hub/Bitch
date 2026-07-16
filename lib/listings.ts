@@ -136,7 +136,7 @@ async function callListingsApi<T>(action: string, params: Record<string, unknown
     body: JSON.stringify({ action, ...params }),
   });
   const out: ApiEnvelope<T> = await res.json();
-  if (!out.ok) throw new ListingsApiError(out.error.message, out.error.code);
+  if (out.ok === false) throw new ListingsApiError(out.error.message, out.error.code);
   return out.data;
 }
 
