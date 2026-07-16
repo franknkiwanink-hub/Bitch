@@ -295,7 +295,7 @@ export function useDealChat(chatRoomId: string) {
 
   // ── Send a text message (with AI scam guard) ──
   const sendMessage = useCallback(
-    async (text: string): Promise<{ blocked?: string } | void> => {
+    async (text: string): Promise<{ blocked?: string } | undefined> => {
       const trimmed = text.trim();
       if (!trimmed || !chatRoomId || !room) return;
       const user = auth.currentUser;
@@ -365,26 +365,23 @@ export function useDealChat(chatRoomId: string) {
   );
 
   // ── Escrow actions ──
-  const postDealAction = useCallback(
-    async (action: string, extra: Record<string, unknown> = {}) => {
-      const user = auth.currentUser;
-      if (!user) throw new Error("Not signed in");
-      const idToken = await user.getIdToken();
-      const resp = await fetch("/api/deal", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, idToken, chatRoomId, dealId: room?.dealId || null, ...extra }),
-      });
-      const out = await resp.json();
-      if (!resp.ok) throw new Error(out.error || "Request failed");
-      return out;
-    },
-    [chatRoomId, room]
-  );
+  async function postDealAction(action: string, extra: Record<string, unknown> = {}) {
+    const user = auth.currentUser;
+    if (!user) throw new Error("Not signed in");
+    const idToken = await user.getIdToken();
+    const resp = await fetch("/api/deal", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, idToken, chatRoomId, dealId: room?.dealId || null, ...extra }),
+    });
+    const out = await resp.json();
+    if (!resp.ok) throw new Error(out.error || "Request failed");
+    return out;
+  }
 
-  const payEscrow = useCallback((amount: number) => postDealAction("escrow-pay", { amount }), [postDealAction]);
-  const releaseEscrow = useCallback(() => postDealAction("escrow-release"), [postDealAction]);
-  const raiseDispute = useCallback((reason: string) => postDealAction("escrow-dispute", { reason }), [postDealAction]);
+  const payEscrow = useCallback((amount: number) => postDealAction("escrow-pay", { amount }), [chatRoomId, room]);
+  const releaseEscrow = useCallback(() => postDealAction("escrow-release"), [chatRoomId, room]);
+  const raiseDispute = useCallback((reason: string) => postDealAction("escrow-dispute", { reason }), [chatRoomId, room]);
 
   const cancelDeal = useCallback(async () => {
     const user = auth.currentUser;
