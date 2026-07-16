@@ -140,9 +140,9 @@ export default function TransferDealModal(props: TransferDealModalProps) {
           onClose={() => setPreviewOpen(false)}
           onConfirm={async () => {
             const result = await tdm.finalizeTransfer();
-            if (result.ok) {
+            if (result.ok === true) {
               setPreviewOpen(false);
-            } else {
+            } else if (result.ok === false) {
               await alert({ theme: "danger", title: "Transfer Failed", msg: result.error });
             }
           }}
